@@ -1,20 +1,17 @@
 package com.gabriel.hydrotrack.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabriel.hydrotrack.ui.home.HomeScreen
 import com.gabriel.hydrotrack.ui.screens.goal.GoalScreen
 import com.gabriel.hydrotrack.ui.screens.login.LoginScreen
-import com.gabriel.hydrotrack.ui.screens.profile.ProfileScreen
+import com.gabriel.hydrotrack.ui.screens.profile.ProfileScreen // <<< ESTE IMPORT É ESSENCIAL
 import com.gabriel.hydrotrack.ui.screens.settings.SettingsScreen
 import com.gabriel.hydrotrack.ui.screens.unit.UnitScreen
-import com.gabriel.hydrotrack.viewmodel.GoalViewModel
-import com.gabriel.hydrotrack.viewmodel.HomeViewModel
-import com.gabriel.hydrotrack.viewmodel.ThemeViewModel
-import com.gabriel.hydrotrack.viewmodel.UnitViewModel
+import com.gabriel.hydrotrack.viewmodel.*
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -35,7 +32,6 @@ fun AppNavigation(
             LoginScreen(navController = navController)
         }
         composable(Screen.Home.route) {
-
             HomeScreen(
                 navController = navController,
                 themeViewModel = themeViewModel,
@@ -43,20 +39,22 @@ fun AppNavigation(
             )
         }
         composable(Screen.Profile.route) {
-            ProfileScreen(navController = navController)
+            // Esta chamada agora deve funcionar, pois o import foi verificado
+            ProfileScreen(
+                navController = navController,
+                profileViewModel = viewModel<ProfileViewModel>()
+            )
         }
         composable(Screen.Settings.route) {
             SettingsScreen(navController = navController)
         }
         composable(Screen.Goal.route) {
-
             GoalScreen(
                 navController = navController,
                 goalViewModel = viewModel<GoalViewModel>()
             )
         }
         composable(Screen.Unit.route) {
-
             UnitScreen(
                 navController = navController,
                 unitViewModel = viewModel<UnitViewModel>()

@@ -13,6 +13,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.gabriel.hydrotrack.R
 import com.gabriel.hydrotrack.navigation.Screen
@@ -23,7 +24,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    profileViewModel: ProfileViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    profileViewModel: ProfileViewModel = viewModel()
 ) {
     val userProfile by profileViewModel.userProfile.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -33,10 +34,9 @@ fun ProfileScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showEditConfirmDialog by remember { mutableStateOf(false) }
 
-    // Campos temporários para edição
-    var editedName by remember { mutableStateOf("") }
-    var editedEmail by remember { mutableStateOf("") }
-    var editedPhone by remember { mutableStateOf("") }
+    var editedName by remember(userProfile) { mutableStateOf(userProfile.name) }
+    var editedEmail by remember(userProfile) { mutableStateOf(userProfile.email) }
+    var editedPhone by remember(userProfile) { mutableStateOf(userProfile.phone) }
 
     Scaffold(
         topBar = {
@@ -120,7 +120,6 @@ fun ProfileScreen(
         }
     }
 
-    // 🧾 Diálogo para editar dados
     if (showEditDialog) {
         AlertDialog(
             onDismissRequest = { showEditDialog = false },
@@ -172,7 +171,6 @@ fun ProfileScreen(
         )
     }
 
-    // ✅ Confirmação ao salvar dados
     if (showEditConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showEditConfirmDialog = false },
@@ -201,7 +199,6 @@ fun ProfileScreen(
         )
     }
 
-    // 🗑️ Confirmação ao apagar conta
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },

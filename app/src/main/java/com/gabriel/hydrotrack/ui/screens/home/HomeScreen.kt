@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,10 +24,10 @@ import kotlin.math.min
 fun HomeScreen(
     navController: NavController,
     themeViewModel: ThemeViewModel,
-    homeViewModel: HomeViewModel = viewModel() // ViewModel é injetado automaticamente
+    homeViewModel: HomeViewModel = viewModel()
 ) {
     val consumedWater by homeViewModel.consumedWater.collectAsState()
-    val dailyGoal by homeViewModel.dailyGoal.collectAsState() // Lê a meta salva
+    val dailyGoal by homeViewModel.dailyGoal.collectAsState()
     val progress = if (dailyGoal > 0) min(consumedWater / dailyGoal.toFloat(), 1f) else 0f
 
     val animatedProgress by animateFloatAsState(targetValue = progress, label = "Progress Animation")
@@ -60,8 +61,9 @@ fun HomeScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { homeViewModel.addWater(250) }) {
-                Text("+250ml")
+            // Botão "+" agora abre o diálogo de adição personalizada
+            FloatingActionButton(onClick = { showCustomAddDialog = true }) {
+                Icon(Icons.Default.Add, contentDescription = "Adicionar água")
             }
         }
     ) { paddingValues ->
@@ -78,14 +80,10 @@ fun HomeScreen(
             Text("$consumedWater ml / $dailyGoal ml", style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(16.dp))
             LinearProgressIndicator(progress = animatedProgress, modifier = Modifier.fillMaxWidth().height(8.dp))
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Botão para abrir o diálogo de adição personalizada
-            OutlinedButton(onClick = { showCustomAddDialog = true }) {
-                Text("Adicionar Quantidade Personalizada")
-            }
         }
     }
+
+    // O diálogo permanece o mesmo
     if (showCustomAddDialog) {
         CustomWaterAddDialog(
             onDismiss = { showCustomAddDialog = false },
