@@ -1,15 +1,66 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
+# =================================================================
+# Arquivo .gitignore para projetos Android com Kotlin e Gradle
+# =================================================================
+
+# Arquivos de Build
+# -----------------
+# Ignora todos os diretórios 'build' no projeto.
 /build
-/captures
+/app/build
+
+# Arquivos gerados
+# ----------------
+# Ignora APKs, Android App Bundles, e outros pacotes gerados.
+*.apk
+*.aab
+*.jar
+*.war
+*.ear
+
+# Propriedades Locais
+# -------------------
+# Este arquivo contém informações específicas do seu ambiente, como a localização do SDK.
+# [cite_start]Nunca deve ser versionado. [cite: 1]
+local.properties
+/local.properties
+
+# Arquivos do Android Studio e IntelliJ (IDE)
+# -------------------------------------------
+# Ignora arquivos e pastas de configuração da IDE.
+*.iml
+.idea/
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+
+# Arquivos do sistema operacional
+# -----------------------------
+.DS_Store
+Thumbs.db
+
+# Arquivos de Dependências do Gradle
+# ----------------------------------
+.gradle/
+/gradle/
+/gradle-wrapper.jar
+!/gradle/wrapper/gradle-wrapper.jar
+
+# Logs e outros arquivos temporários
+# ---------------------------------
+/captures/
+*.hprof
+*.log
+
+# Arquivos de build nativo (C/C++)
+# --------------------------------
 .externalNativeBuild
 .cxx
-local.properties
+
+# Arquivos de Chaves de Assinatura
+# --------------------------------
+# IMPORTANTE: Nunca envie suas chaves de assinatura para o repositório!
+*.jks
+*.keystore

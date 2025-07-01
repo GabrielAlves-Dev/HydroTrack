@@ -1,31 +1,34 @@
 package com.gabriel.hydrotrack.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.gabriel.hydrotrack.data.SettingsDataStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 
-class HomeViewModel : ViewModel() {
+class HomeViewModel(application: Application) : AndroidViewModel(application) {
+    private val settingsDataStore = SettingsDataStore(application)
 
-    // Quantidade de água consumida no dia (em ml)
     private val _consumedWater = MutableStateFlow(0)
     val consumedWater: StateFlow<Int> = _consumedWater
 
-    // Meta diária de consumo (em ml)
-    private val _dailyGoal = MutableStateFlow(2000)
-    val dailyGoal: StateFlow<Int> = _dailyGoal
+    val dailyGoal: StateFlow<Int> = settingsDataStore.dailyGoal
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = 2000
+        )
 
-    // Adiciona uma quantidade de água ao total consumido
     fun addWater(amount: Int) {
-        _consumedWater.value += amount
+        if (amount > 0) {
+            _consumedWater.value += amount
+        }
     }
 
-    // Reinicia o consumo diário (opcional)
     fun resetConsumption() {
         _consumedWater.value = 0
-    }
-
-    // Atualiza a meta diária (opcional)
-    fun setDailyGoal(goal: Int) {
-        _dailyGoal.value = goal
     }
 }

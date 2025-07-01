@@ -1,15 +1,26 @@
 package com.gabriel.hydrotrack.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.gabriel.hydrotrack.data.SettingsDataStore
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
-class ThemeViewModel : ViewModel() {
-    var isDarkTheme by mutableStateOf(false)
-        private set
+class ThemeViewModel(application: Application) : AndroidViewModel(application) {
+    private val settingsDataStore = SettingsDataStore(application)
+
+    val isDarkTheme = settingsDataStore.isDarkMode
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = false
+        )
 
     fun toggleTheme() {
-        isDarkTheme = !isDarkTheme
+        viewModelScope.launch {
+            settingsDataStore.toggleDarkMode()
+        }
     }
 }

@@ -5,10 +5,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.gabriel.hydrotrack.viewmodel.UnitViewModel
 import com.gabriel.hydrotrack.viewmodel.WaterUnit
@@ -17,9 +19,10 @@ import com.gabriel.hydrotrack.viewmodel.WaterUnit
 @Composable
 fun UnitScreen(
     navController: NavController,
-    unitViewModel: UnitViewModel
+    unitViewModel: UnitViewModel = viewModel()
 ) {
-    val selectedUnit by unitViewModel.selectedUnit
+    // Coleta o estado do StateFlow
+    val selectedUnit by unitViewModel.selectedUnit.collectAsState()
 
     Scaffold(
         topBar = {
@@ -56,7 +59,7 @@ fun UnitScreen(
                 ) {
                     RadioButton(
                         selected = unit == selectedUnit,
-                        onClick = { unitViewModel.setUnit(unit) }
+                        onClick = { unitViewModel.setUnit(unit) } // Ação de clique permanece a mesma
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(text = unit.displayName)
@@ -65,4 +68,3 @@ fun UnitScreen(
         }
     }
 }
-
