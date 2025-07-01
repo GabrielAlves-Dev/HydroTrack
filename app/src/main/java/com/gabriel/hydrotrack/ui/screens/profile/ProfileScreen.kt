@@ -4,7 +4,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,7 +32,7 @@ fun ProfileScreen(
     val scope = rememberCoroutineScope()
 
     var showEditDialog by remember { mutableStateOf(false) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
     var showEditConfirmDialog by remember { mutableStateOf(false) }
 
     var editedName by remember(userProfile) { mutableStateOf(userProfile.name) }
@@ -68,7 +69,9 @@ fun ProfileScreen(
                     elevation = CardDefaults.cardElevation(8.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(24.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
@@ -106,15 +109,12 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedButton(
-                    onClick = { showDeleteDialog = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
+                    onClick = { showLogoutDialog = true },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(Icons.Default.Delete, contentDescription = "Apagar")
+                    Icon(painterResource(id = R.drawable.ic_logout), contentDescription = "Sair", modifier = Modifier.size(24.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Apagar Conta")
+                    Text("Sair da Conta")
                 }
             }
         }
@@ -199,23 +199,24 @@ fun ProfileScreen(
         )
     }
 
-    if (showDeleteDialog) {
+    if (showLogoutDialog) {
         AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Apagar Conta") },
-            text = { Text("Tem certeza que deseja apagar sua conta? Essa ação é irreversível.") },
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Sair da Conta") },
+            text = { Text("Tem certeza que deseja sair?") },
             confirmButton = {
                 TextButton(onClick = {
-                    showDeleteDialog = false
+                    showLogoutDialog = false
+                    profileViewModel.logout()
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Home.route) { inclusive = true }
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
                     }
                 }) {
-                    Text("Apagar", color = MaterialTheme.colorScheme.error)
+                    Text("Sair")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
+                TextButton(onClick = { showLogoutDialog = false }) {
                     Text("Cancelar")
                 }
             }

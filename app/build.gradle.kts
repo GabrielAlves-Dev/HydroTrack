@@ -50,6 +50,8 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
     implementation("androidx.navigation:navigation-compose:2.9.0")
     implementation("androidx.compose.animation:animation")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
