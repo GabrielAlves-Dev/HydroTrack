@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.gabriel.hydrotrack.viewmodel.GoalViewModel
 
@@ -17,9 +18,12 @@ import com.gabriel.hydrotrack.viewmodel.GoalViewModel
 @Composable
 fun GoalScreen(
     navController: NavController,
-    goalViewModel: GoalViewModel
+    goalViewModel: GoalViewModel = viewModel()
 ) {
-    var inputValue by remember { mutableStateOf(goalViewModel.dailyGoal.value.toString()) }
+    // Coleta o valor atual da meta que vem do DataStore
+    val dailyGoal by goalViewModel.dailyGoal.collectAsState()
+
+    var inputValue by remember(dailyGoal) { mutableStateOf(dailyGoal.toString()) }
     var error by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -76,7 +80,7 @@ fun GoalScreen(
                         error = true
                     } else {
                         goalViewModel.setDailyGoal(newGoal)
-                        navController.popBackStack() // Voltar após salvar
+                        navController.popBackStack()
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
