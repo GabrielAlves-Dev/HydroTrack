@@ -48,10 +48,12 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     implementation("androidx.navigation:navigation-compose:2.9.0")
+    implementation("androidx.compose.animation:animation")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
     implementation(libs.ads.mobile.sdk)
 
     testImplementation(libs.junit)

@@ -1,8 +1,14 @@
 package com.gabriel.hydrotrack.viewmodel
 
-import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.gabriel.hydrotrack.data.SettingsDataStore
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class UserProfile(
     val name: String,
@@ -10,20 +16,26 @@ data class UserProfile(
     val phone: String
 )
 
-class ProfileViewModel : ViewModel() {
+class ProfileViewModel(application: Application) : AndroidViewModel(application) {
+    private val settingsDataStore = SettingsDataStore(application)
 
-    // Dados simulados do usuário
-    private val _userProfile = MutableStateFlow(
-        UserProfile(
-            name = "Gabriel Silva",
-            email = "gabriel@example.com",
-            phone = "(11) 99999-9999"
-        )
+    // Combina os Flows do DataStore em um único objeto UserProfile
+    val userProfile: StateFlow<UserProfile> = combine(
+        settingsDataStore.userName,
+        settingsDataStore.userEmail,
+        settingsDataStore.userPhone
+    ) { name: String, email: String, phone: String -> // Tipos especificados para o compilador
+        UserProfile(name, email, phone)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = UserProfile("Carregando...", "", "")
     )
-    val userProfile: StateFlow<UserProfile> = _userProfile
 
+    // Salva os dados atualizados do perfil no DataStore
     fun updateUserProfile(name: String, email: String, phone: String) {
-        _userProfile.value = UserProfile(name, email, phone)
+        viewModelScope.launch {
+            settingsDataStore.updateUserProfile(name, email, phone)
+        }
     }
-    // Futuras funções para atualizar os dados do usuário podem ser adicionadas aqui
 }
