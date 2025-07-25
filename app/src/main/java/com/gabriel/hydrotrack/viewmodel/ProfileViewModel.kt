@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.gabriel.hydrotrack.data.SettingsDataStore
 import com.gabriel.hydrotrack.service.NotificationScheduler
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -20,6 +21,7 @@ data class UserProfile(
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
     private val settingsDataStore = SettingsDataStore(application)
     private val scheduler = NotificationScheduler(application)
+    private val firebaseAuth = FirebaseAuth.getInstance()
 
     val userProfile: StateFlow<UserProfile> = combine(
         settingsDataStore.userName,
@@ -42,7 +44,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     fun logout() {
         viewModelScope.launch {
             scheduler.cancelNotifications()
-            settingsDataStore.clearLoggedInUser()
+            firebaseAuth.signOut()
         }
     }
 }

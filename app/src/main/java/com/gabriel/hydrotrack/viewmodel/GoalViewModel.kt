@@ -15,7 +15,7 @@ class GoalViewModel(application: Application) : AndroidViewModel(application) {
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
-            initialValue = 2000 // Valor inicial enquanto o DataStore carrega
+            initialValue = 2000
         )
 
     fun setDailyGoal(newGoal: Int) {

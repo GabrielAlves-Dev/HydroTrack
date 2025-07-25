@@ -43,8 +43,8 @@ class MainViewModel(context: Context) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            val user = SettingsDataStore(context).loggedInUserEmail.first()
-            if (!user.isNullOrBlank()) {
+            val userEmail = SettingsDataStore(context).loggedInUserEmail.first()
+            if (!userEmail.isNullOrBlank()) {
                 _startDestination.value = Screen.Home.route
             }
             _isLoading.value = false
@@ -52,12 +52,10 @@ class MainViewModel(context: Context) : ViewModel() {
     }
 }
 
-
 class MainActivity : ComponentActivity() {
 
     private val themeViewModel: ThemeViewModel by viewModels()
     private val mainViewModel: MainViewModel by lazy { MainViewModel(applicationContext) }
-
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()

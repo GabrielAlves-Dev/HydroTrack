@@ -2,20 +2,20 @@ package com.gabriel.hydrotrack.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import com.gabriel.hydrotrack.data.SettingsDataStore
 import com.gabriel.hydrotrack.service.NotificationScheduler
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
     private val settingsDataStore = SettingsDataStore(application)
     private val scheduler = NotificationScheduler(application)
-
-    private val mockUsers = mapOf(
-        "usuario1@email.com" to "senha123",
-        "usuario2@email.com" to "senha456",
-        "gabriel@example.com" to "admin"
-    )
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
     fun login(email: String, pass: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         if (email.isBlank() || pass.isBlank()) {
@@ -23,14 +23,58 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
 
-        if (mockUsers.containsKey(email) && mockUsers[email] == pass) {
-            viewModelScope.launch {
-                settingsDataStore.setLoggedInUser(email)
+        viewModelScope.launch {
+            try {
+                auth.signInWithEmailAndPassword(email, pass).await()
+                val currentUser = auth.currentUser
+                if (currentUser != null) {
+                    settingsDataStore.initializeUserData(currentUser.email ?: "", currentUser.displayName)
+                }
                 scheduler.scheduleRepeatingNotifications()
                 onSuccess()
+            } catch (e: Exception) {
+                onError("Erro ao fazer login: ${e.localizedMessage}")
             }
-        } else {
-            onError("Email ou senha inválidos")
+        }
+    }
+
+    fun register(email: String, pass: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        if (email.isBlank() || pass.isBlank()) {
+            onError("Preencha todos os campos")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                auth.createUserWithEmailAndPassword(email, pass).await()
+                val currentUser = auth.currentUser
+                if (currentUser != null) {
+                    settingsDataStore.initializeUserData(currentUser.email ?: "", currentUser.displayName)
+                }
+                scheduler.scheduleRepeatingNotifications()
+                onSuccess()
+            } catch (e: Exception) {
+                onError("Erro ao registrar: ${e.localizedMessage}")
+            }
+        }
+    }
+
+    fun signInWithGoogleCredential(idToken: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val credential = GoogleAuthProvider.getCredential(idToken, null)
+                auth.signInWithCredential(credential).await()
+                val currentUser = auth.currentUser
+                if (currentUser != null) {
+                    val googleAccount = GoogleSignIn.getLastSignedInAccount(application.applicationContext)
+                    val displayNameFromGoogle = googleAccount?.displayName
+                    settingsDataStore.initializeUserData(currentUser.email ?: "", displayNameFromGoogle)
+                }
+                scheduler.scheduleRepeatingNotifications()
+                onSuccess()
+            } catch (e: Exception) {
+                onError("Erro ao fazer login com Google: ${e.localizedMessage}")
+            }
         }
     }
 }

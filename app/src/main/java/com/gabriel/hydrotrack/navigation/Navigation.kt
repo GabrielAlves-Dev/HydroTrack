@@ -1,5 +1,7 @@
 package com.gabriel.hydrotrack.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -11,6 +13,7 @@ import com.gabriel.hydrotrack.ui.screens.login.LoginScreen
 import com.gabriel.hydrotrack.ui.screens.profile.ProfileScreen
 import com.gabriel.hydrotrack.ui.screens.settings.SettingsScreen
 import com.gabriel.hydrotrack.ui.screens.unit.UnitScreen
+import com.gabriel.hydrotrack.ui.screens.history.ConsumptionHistoryScreen
 import com.gabriel.hydrotrack.viewmodel.*
 
 sealed class Screen(val route: String) {
@@ -20,8 +23,10 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings")
     object Goal : Screen("goal")
     object Unit : Screen("unit")
+    object ConsumptionHistory : Screen("consumption_history")
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation(
     navController: NavHostController,
@@ -63,6 +68,12 @@ fun AppNavigation(
             UnitScreen(
                 navController = navController,
                 unitViewModel = viewModel<UnitViewModel>()
+            )
+        }
+        composable(Screen.ConsumptionHistory.route) {
+            ConsumptionHistoryScreen(
+                navController = navController,
+                historyViewModel = viewModel<ConsumptionHistoryViewModel>()
             )
         }
     }

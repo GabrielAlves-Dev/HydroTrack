@@ -63,6 +63,10 @@ fun HomeScreen(
                             menuExpanded = false
                             navController.navigate(Screen.Settings.route)
                         })
+                        DropdownMenuItem(text = { Text("Histórico de Consumo") }, onClick = {
+                            menuExpanded = false
+                            navController.navigate(Screen.ConsumptionHistory.route)
+                        })
                         DropdownMenuItem(text = { Text("Alternar Tema") }, onClick = {
                             menuExpanded = false
                             themeViewModel.toggleTheme()
