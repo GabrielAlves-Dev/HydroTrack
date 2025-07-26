@@ -164,6 +164,12 @@ class SettingsDataStore(private val context: Context) {
         }
     }
 
+    suspend fun clearUserData() {
+        context.dataStore.edit { preferences ->
+            preferences.clear()
+        }
+    }
+
     val userName: Flow<String> = getFlowForCurrentUser(PreferencesKeys::userNameKey, "Usuário")
     val userEmail: Flow<String> = getFlowForCurrentUser(PreferencesKeys::userEmailKey, "")
     val userPhone: Flow<String> = getFlowForCurrentUser(PreferencesKeys::userPhoneKey, "")

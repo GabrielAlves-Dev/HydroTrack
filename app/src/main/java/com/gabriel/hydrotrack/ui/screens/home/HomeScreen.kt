@@ -1,5 +1,7 @@
-package com.gabriel.hydrotrack.ui.home
+package com.gabiel.hydrotrack.ui.home
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -20,20 +22,24 @@ import com.gabriel.hydrotrack.navigation.Screen
 import com.gabriel.hydrotrack.viewmodel.HomeViewModel
 import com.gabriel.hydrotrack.viewmodel.ThemeViewModel
 import com.gabriel.hydrotrack.viewmodel.UnitViewModel
+import com.gabriel.hydrotrack.viewmodel.LoginViewModel
 import java.util.*
 import kotlin.math.min
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
     themeViewModel: ThemeViewModel,
     homeViewModel: HomeViewModel = viewModel(),
-    unitViewModel: UnitViewModel = viewModel()
+    unitViewModel: UnitViewModel = viewModel(),
+    loginViewModel: LoginViewModel = viewModel()
 ) {
     val consumedWater by homeViewModel.consumedWater.collectAsState()
     val dailyGoal by homeViewModel.dailyGoal.collectAsState()
     val selectedUnit by unitViewModel.selectedUnit.collectAsState()
+    val weatherData by homeViewModel.weatherData.collectAsState() // <--- NOVO: Coleta dados do clima
 
     val convertedConsumed = unitViewModel.convertMlToSelectedUnit(consumedWater, selectedUnit)
     val convertedGoal = unitViewModel.convertMlToSelectedUnit(dailyGoal, selectedUnit)
@@ -71,6 +77,13 @@ fun HomeScreen(
                             menuExpanded = false
                             themeViewModel.toggleTheme()
                         })
+                        DropdownMenuItem(text = { Text("Sair da Conta") }, onClick = {
+                            menuExpanded = false
+                            loginViewModel.logout()
+                            navController.navigate(Screen.Login.route) {
+                                popUpTo(Screen.Home.route) { inclusive = true }
+                            }
+                        })
                     }
                 }
             )
@@ -107,6 +120,27 @@ fun HomeScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
             LinearProgressIndicator(progress = animatedProgress, modifier = Modifier.fillMaxWidth().height(8.dp))
+
+            Spacer(modifier = Modifier.height(32.dp)) // Espaçamento antes dos dados do clima
+
+            // NOVO: Exibição dos dados do clima
+            weatherData?.let { data ->
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Clima Atual em ${data.name}", style = MaterialTheme.typography.titleMedium)
+                    Text("Temperatura: %.1f°C".format(Locale.getDefault(), data.main.temp), style = MaterialTheme.typography.bodyLarge)
+                    Text("Umidade: ${data.main.humidity}%", style = MaterialTheme.typography.bodyLarge)
+                    Text("Condição: ${data.weather.firstOrNull()?.description?.capitalize(Locale.ROOT) ?: "N/A"}", style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "A hidratação ideal depende das condições climáticas!",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+                }
+            } ?: run {
+                Text("Carregando dados do clima...", style = MaterialTheme.typography.bodyMedium)
+                // Opcional: Adicionar um CircularProgressIndicator aqui se o carregamento do clima for demorado e você quiser feedback
+            }
         }
     }
 

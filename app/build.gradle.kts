@@ -45,31 +45,46 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    // Compose BOM (a versão será definida em libs.versions.toml)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    // REMOVIDO: "com.google.android.material:material" - Não é necessário para Compose Material3 e pode causar conflitos.
+    // implementation("com.google.android.material:material:1.12.0")
 
     implementation("androidx.core:core-splashscreen:1.0.1")
 
-    implementation("androidx.navigation:navigation-compose:2.9.0")
+    implementation(libs.androidx.navigation.compose)
     implementation("androidx.compose.animation:animation")
+
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
     implementation(libs.ads.mobile.sdk)
 
-    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
-
-    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
     implementation("com.google.android.gms:play-services-auth:21.2.0")
+    implementation(libs.firebase.database)
 
-    implementation("com.google.firebase:firebase-database-ktx")
+    implementation(libs.androidx.room.runtime)
+    kapt(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
 
-    implementation("androidx.room:room-runtime:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
+    // Mantenha estas linhas para garantir que o Foundation esteja lá
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.foundation:foundation-layout")
+
+
+    // Dependências Retrofit e Localização
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

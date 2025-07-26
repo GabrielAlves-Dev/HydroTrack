@@ -17,11 +17,13 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.CircularProgressIndicator // Adicionado
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState // Adicionado
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -45,6 +47,8 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isRegisterMode by remember { mutableStateOf(false) }
+
+    val isLoading by loginViewModel.isLoading.collectAsState()
 
     val context = LocalContext.current
 
@@ -116,7 +120,8 @@ fun LoginScreen(
                     onValueChange = { email = it },
                     label = { Text("Email") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -127,7 +132,8 @@ fun LoginScreen(
                     label = { Text("Senha") },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
                 )
 
                 if (errorMessage != null) {
@@ -165,7 +171,8 @@ fun LoginScreen(
                             )
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
                 ) {
                     Text(text = if (isRegisterMode) "Registrar" else "Login")
                 }
@@ -174,11 +181,14 @@ fun LoginScreen(
 
                 Button(
                     onClick = {
-                        val signInIntent = googleSignInClient.signInIntent
-                        googleSignInLauncher.launch(signInIntent)
+                        googleSignInClient.signOut().addOnCompleteListener {
+                            val signInIntent = googleSignInClient.signInIntent
+                            googleSignInLauncher.launch(signInIntent)
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                    enabled = !isLoading
                 ) {
                     Text(text = "Entrar com Google", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -190,10 +200,15 @@ fun LoginScreen(
                         isRegisterMode = !isRegisterMode
                         errorMessage = null
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
                 ) {
                     Text(text = if (isRegisterMode) "Já tem uma conta? Faça Login" else "Não tem uma conta? Cadastre-se")
                 }
+            }
+
+            if (isLoading) {
+                CircularProgressIndicator()
             }
         }
     }
