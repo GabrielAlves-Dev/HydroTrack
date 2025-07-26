@@ -23,7 +23,7 @@
 # [cite_start]Nunca deve ser versionado. [cite: 1]
 local.properties
 /local.properties
-
+/app/google-services.json
 # Arquivos do Android Studio e IntelliJ (IDE)
 # -------------------------------------------
 # Ignora arquivos e pastas de configuração da IDE.
