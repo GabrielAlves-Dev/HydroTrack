@@ -6,8 +6,8 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.gabriel.hydrotrack.R
-import com.gabriel.hydrotrack.data.SettingsDataStore
-import com.gabriel.hydrotrack.viewmodel.WaterUnit
+import com.gabriel.hydrotrack.data.local.preferences.UserPreferencesDataStore
+import com.gabriel.hydrotrack.presentation.viewmodel.WaterUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -24,7 +24,7 @@ class NotificationReceiver : BroadcastReceiver() {
             return
         }
 
-        val dataStore = SettingsDataStore(context)
+        val dataStore = UserPreferencesDataStore(context)
         val pendingResult = goAsync()
 
         CoroutineScope(Dispatchers.IO).launch {

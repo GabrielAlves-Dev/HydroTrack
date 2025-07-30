@@ -7,7 +7,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log // Importar Log para debug
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,7 +18,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.*
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
@@ -26,11 +27,11 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.compose.rememberNavController
-import com.gabriel.hydrotrack.data.SettingsDataStore
+import com.gabriel.hydrotrack.data.local.preferences.UserPreferencesDataStore
 import com.gabriel.hydrotrack.navigation.AppNavigation
 import com.gabriel.hydrotrack.navigation.Screen
-import com.gabriel.hydrotrack.ui.theme.HydroTrackTheme
-import com.gabriel.hydrotrack.viewmodel.ThemeViewModel
+import com.gabriel.hydrotrack.presentation.ui.theme.HydroTrackTheme
+import com.gabriel.hydrotrack.presentation.viewmodel.ThemeViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +39,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-// ViewModel para gerenciar o estado inicial da MainActivity (ainda será usado)
 class MainViewModel(context: Context) : ViewModel() {
     private val _isLoading = MutableStateFlow(true)
     val isLoading = _isLoading.asStateFlow()
@@ -48,7 +48,7 @@ class MainViewModel(context: Context) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            val userEmail = SettingsDataStore(context).loggedInUserEmail.first()
+            val userEmail = UserPreferencesDataStore(context).loggedInUserEmail.first()
             if (!userEmail.isNullOrBlank()) {
                 _startDestination.value = Screen.Home.route
             }
@@ -62,36 +62,29 @@ class MainActivity : ComponentActivity() {
     private val themeViewModel: ThemeViewModel by viewModels()
     private val mainViewModel: MainViewModel by lazy { MainViewModel(applicationContext) }
 
-    private lateinit var fusedLocationClient: FusedLocationProviderClient // Cliente de localização
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
-    // Variáveis de estado para a localização
     private val _userLatitude = MutableStateFlow<Double?>(null)
     private val _userLongitude = MutableStateFlow<Double?>(null)
 
-    // Launcher para a permissão de notificação (existente)
     private val requestNotificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { }
 
-    // Launcher para as permissões de localização
     private val requestLocationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         when {
             permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
-                // Permissão de localização precisa concedida
                 Log.d("MainActivity", "ACCESS_FINE_LOCATION Granted")
                 getLastLocation()
             }
             permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
-                // Permissão de localização aproximada concedida
                 Log.d("MainActivity", "ACCESS_COARSE_LOCATION Granted")
                 getLastLocation()
             }
             else -> {
-                // Nenhuma permissão de localização concedida
                 Log.w("MainActivity", "Location permissions denied.")
-                // Você pode exibir uma mensagem para o usuário ou desativar funcionalidades que dependem de localização
             }
         }
     }
@@ -117,7 +110,6 @@ class MainActivity : ComponentActivity() {
                 )
             )
         } else {
-            // Permissões já concedidas, obter última localização
             getLastLocation()
         }
     }
@@ -132,9 +124,6 @@ class MainActivity : ComponentActivity() {
                         _userLatitude.value = location.latitude
                         _userLongitude.value = location.longitude
                         Log.d("MainActivity", "Location: Lat ${location.latitude}, Lon ${location.longitude}")
-                        // Agora que temos a localização, podemos passar para o HomeViewModel
-                        // ou injetar esses valores de alguma forma.
-                        // Isso será feito no setup do AppNavigation no setContent
                     } else {
                         Log.w("MainActivity", "Last known location is null.")
                     }
@@ -153,10 +142,10 @@ class MainActivity : ComponentActivity() {
             mainViewModel.isLoading.value
         }
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this) // Inicializa o cliente de localização
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         askNotificationPermission()
-        askLocationPermissions() // Solicita permissões de localização
+        askLocationPermissions()
         createNotificationChannel()
 
         setContent {
@@ -165,7 +154,6 @@ class MainActivity : ComponentActivity() {
             val isDarkTheme by themeViewModel.isDarkTheme.collectAsState()
             val navController = rememberNavController()
 
-            // Coleta a localização como estados Composable
             val latitude by _userLatitude.collectAsState()
             val longitude by _userLongitude.collectAsState()
 
@@ -182,13 +170,12 @@ class MainActivity : ComponentActivity() {
                             CircularProgressIndicator()
                         }
                     } else {
-                        // Passa a localização para o AppNavigation (e HomeViewModel)
                         AppNavigation(
                             navController = navController,
                             themeViewModel = themeViewModel,
                             startDestination = startDestination,
-                            userLatitude = latitude, // <--- NOVO
-                            userLongitude = longitude // <--- NOVO
+                            userLatitude = latitude,
+                            userLongitude = longitude
                         )
                     }
                 }

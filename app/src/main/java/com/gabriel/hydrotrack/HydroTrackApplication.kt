@@ -1,8 +1,8 @@
 package com.gabriel.hydrotrack
 
 import android.app.Application
-import com.gabriel.hydrotrack.data.db.AppDatabase
 import androidx.room.Room
+import com.gabriel.hydrotrack.data.local.db.AppDatabase
 
 class HydroTrackApplication : Application() {
 
