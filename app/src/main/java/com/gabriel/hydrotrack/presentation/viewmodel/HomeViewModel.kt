@@ -1,0 +1,134 @@
+package com.gabriel.hydrotrack.presentation.viewmodel
+
+import android.app.Application
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.gabriel.hydrotrack.HydroTrackApplication
+import com.gabriel.hydrotrack.data.local.dao.WaterRecord
+import com.gabriel.hydrotrack.data.local.dao.WaterRecordDao
+import com.gabriel.hydrotrack.data.local.preferences.UserPreferencesDataStore
+import com.gabriel.hydrotrack.data.remote.weather.WeatherData
+import com.gabriel.hydrotrack.data.remote.weather.WeatherRepository
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalDateTime
+
+@RequiresApi(Build.VERSION_CODES.O)
+class HomeViewModel(
+    application: Application,
+    private val latitude: Double?,
+    private val longitude: Double?
+) : AndroidViewModel(application) {
+    private val settingsDataStore = UserPreferencesDataStore(application)
+    private val waterRecordDao: WaterRecordDao
+    private val firebaseAuth = FirebaseAuth.getInstance()
+    private val weatherRepository = WeatherRepository()
+
+    private val _consumedWater = MutableStateFlow(0)
+    val consumedWater: StateFlow<Int> = _consumedWater
+
+    val dailyGoal: StateFlow<Int> = settingsDataStore.dailyGoal
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = 2000
+        )
+
+    private val _weatherData = MutableStateFlow<WeatherData?>(null)
+    val weatherData: StateFlow<WeatherData?> = _weatherData
+
+    init {
+        waterRecordDao = (application as HydroTrackApplication).database.waterRecordDao()
+
+        viewModelScope.launch {
+            settingsDataStore.loggedInUserEmail.collectLatest { email ->
+                val uid = firebaseAuth.currentUser?.uid
+                if (email != null && uid != null) {
+                    settingsDataStore.syncDataFromFirebaseToLocal(email)
+
+                    waterRecordDao.getTotalConsumptionForUserAndDate(uid, LocalDate.now()).collectLatest { totalMl ->
+                        _consumedWater.value = totalMl ?: 0
+                        settingsDataStore.saveConsumption(_consumedWater.value, LocalDate.now())
+                    }
+                } else {
+                    _consumedWater.value = 0
+                }
+            }
+        }
+        checkDateAndResetConsumption()
+
+        if (latitude != null && longitude != null) {
+            viewModelScope.launch {
+                val data = weatherRepository.getCurrentWeather(latitude, longitude)
+                _weatherData.value = data
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun checkDateAndResetConsumption() {
+        viewModelScope.launch {
+            val today = LocalDate.now().toString()
+            val lastDate = settingsDataStore.lastConsumptionDate.first()
+
+            if (today != lastDate) {
+                settingsDataStore.saveConsumption(0, LocalDate.now())
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun addWater(amountMl: Int) {
+        val uid = firebaseAuth.currentUser?.uid
+        if (amountMl > 0 && uid != null) {
+            viewModelScope.launch {
+                val newRecord = WaterRecord(
+                    userId = uid,
+                    amountMl = amountMl,
+                    timestamp = LocalDateTime.now()
+                )
+                waterRecordDao.insert(newRecord)
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun removeWater(amountMl: Int) {
+        val uid = firebaseAuth.currentUser?.uid
+        if (amountMl > 0 && uid != null) {
+            viewModelScope.launch {
+                val newRecord = WaterRecord(
+                    userId = uid,
+                    amountMl = -amountMl,
+                    timestamp = LocalDateTime.now()
+                )
+                waterRecordDao.insert(newRecord)
+            }
+        }
+    }
+
+    class HomeViewModelFactory(
+        private val application: Application,
+        private val latitude: Double?,
+        private val longitude: Double?
+    ) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                return HomeViewModel(application, latitude, longitude) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
+        }
+    }
+}
