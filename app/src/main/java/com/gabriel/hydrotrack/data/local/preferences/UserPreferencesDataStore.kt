@@ -32,6 +32,7 @@ class UserPreferencesDataStore(private val context: Context) {
 
     private object PreferencesKeys {
         val IS_DARK_MODE = booleanPreferencesKey("is_dark_mode")
+        val SHOW_WEATHER_SUGGESTIONS = booleanPreferencesKey("show_weather_suggestions") // Nova chave de preferência
 
         fun userKey(email: String, key: String) = "${email.replace(".", "_")}_$key"
 
@@ -136,6 +137,16 @@ class UserPreferencesDataStore(private val context: Context) {
     val isDarkMode: Flow<Boolean> = dataStore.data.map { it[PreferencesKeys.IS_DARK_MODE] ?: false }
     suspend fun toggleDarkMode() {
         dataStore.edit { it[PreferencesKeys.IS_DARK_MODE] = !(it[PreferencesKeys.IS_DARK_MODE] ?: false) }
+    }
+
+    // Fluxo para a nova preferência de sugestões de clima
+    val showWeatherSuggestions: Flow<Boolean> = dataStore.data.map { it[PreferencesKeys.SHOW_WEATHER_SUGGESTIONS] ?: true } // Valor padrão: true (ativado)
+
+    // Função para definir a preferência de sugestões de clima
+    suspend fun setShowWeatherSuggestions(enable: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[PreferencesKeys.SHOW_WEATHER_SUGGESTIONS] = enable
+        }
     }
 
     val dailyGoal: Flow<Int> = getFlowForCurrentUser(PreferencesKeys::dailyGoalKey, 2000)

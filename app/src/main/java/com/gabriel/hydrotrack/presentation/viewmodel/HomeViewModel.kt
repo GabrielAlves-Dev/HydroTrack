@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -48,11 +49,29 @@ class HomeViewModel(
     private val _weatherData = MutableStateFlow<WeatherData?>(null)
     val weatherData: StateFlow<WeatherData?> = _weatherData
 
+    // Nova propriedade para a sugestão de hidratação
+    private val _hydrationSuggestion = MutableStateFlow<String?>(null)
+    val hydrationSuggestion: StateFlow<String?> = _hydrationSuggestion
+
+    val showWeatherSuggestions: StateFlow<Boolean> = settingsDataStore.showWeatherSuggestions
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = true
+        )
+
+
     init {
         waterRecordDao = (application as HydroTrackApplication).database.waterRecordDao()
 
         viewModelScope.launch {
-            settingsDataStore.loggedInUserEmail.collectLatest { email ->
+            // Combina o email do usuário e a preferência de mostrar sugestões de clima
+            combine(
+                settingsDataStore.loggedInUserEmail,
+                showWeatherSuggestions
+            ) { email, showSuggestions ->
+                Pair(email, showSuggestions)
+            }.collectLatest { (email, showSuggestions) ->
                 val uid = firebaseAuth.currentUser?.uid
                 if (email != null && uid != null) {
                     settingsDataStore.syncDataFromFirebaseToLocal(email)
@@ -61,19 +80,24 @@ class HomeViewModel(
                         _consumedWater.value = totalMl ?: 0
                         settingsDataStore.saveConsumption(_consumedWater.value, LocalDate.now())
                     }
+
+                    // Busca dados do clima e gera sugestão apenas se a opção estiver ativada
+                    if (showSuggestions && latitude != null && longitude != null) {
+                        val data = weatherRepository.getCurrentWeather(latitude, longitude)
+                        _weatherData.value = data
+                        _hydrationSuggestion.value = generateHydrationSuggestion(data?.main?.temp) // Gera sugestão
+                    } else {
+                        _weatherData.value = null // Limpa dados do clima se a opção estiver desativada
+                        _hydrationSuggestion.value = null // Limpa a sugestão
+                    }
                 } else {
                     _consumedWater.value = 0
+                    _weatherData.value = null
+                    _hydrationSuggestion.value = null
                 }
             }
         }
         checkDateAndResetConsumption()
-
-        if (latitude != null && longitude != null) {
-            viewModelScope.launch {
-                val data = weatherRepository.getCurrentWeather(latitude, longitude)
-                _weatherData.value = data
-            }
-        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -117,6 +141,19 @@ class HomeViewModel(
             }
         }
     }
+
+    private fun generateHydrationSuggestion(temperature: Double?): String {
+        return temperature?.let { temp ->
+            when {
+                temp >= 30.0 -> "Está muito quente! Beba bastante água para se manter hidratado. Considere aumentar sua meta diária!"
+                temp >= 25.0 -> "O clima está quente. Mantenha-se hidratado e reponha os líquidos perdidos."
+                temp >= 20.0 -> "Temperatura agradável, mas não esqueça de beber água regularmente."
+                temp >= 10.0 -> "Clima ameno. Continue com sua hidratação diária."
+                else -> "Temperatura mais baixa. Lembre-se que a hidratação ainda é importante!"
+            }
+        } ?: "Informações climáticas não disponíveis para sugestões de hidratação."
+    }
+
 
     companion object {
         class HomeViewModelFactory(

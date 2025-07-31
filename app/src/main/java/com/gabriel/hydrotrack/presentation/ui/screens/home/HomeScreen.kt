@@ -66,6 +66,8 @@ fun HomeScreen(
     val dailyGoal by homeViewModel.dailyGoal.collectAsState()
     val selectedUnit by unitViewModel.selectedUnit.collectAsState()
     val weatherData by homeViewModel.weatherData.collectAsState()
+    val hydrationSuggestion by homeViewModel.hydrationSuggestion.collectAsState()
+    val showWeatherSuggestions by homeViewModel.showWeatherSuggestions.collectAsState()
 
     val convertedConsumed = unitViewModel.convertMlToSelectedUnit(consumedWater, selectedUnit)
     val convertedGoal = unitViewModel.convertMlToSelectedUnit(dailyGoal, selectedUnit)
@@ -149,22 +151,28 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            weatherData?.let { data ->
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Clima Atual em ${data.name}", style = MaterialTheme.typography.titleMedium)
-                    Text("Temperatura: %.1f°C".format(Locale.getDefault(), data.main.temp), style = MaterialTheme.typography.bodyLarge)
-                    Text("Umidade: ${data.main.humidity}%", style = MaterialTheme.typography.bodyLarge)
-                    Text("Condição: ${data.weather.firstOrNull()?.description?.capitalize(Locale.ROOT) ?: "N/A"}", style = MaterialTheme.typography.bodyLarge)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "A hidratação ideal depende das condições climáticas!",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                    )
+            // Exibe informações do clima e sugestão apenas se a opção estiver ativada e dados disponíveis
+            if (showWeatherSuggestions) {
+                weatherData?.let { data ->
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Clima Atual em ${data.name}", style = MaterialTheme.typography.titleMedium)
+                        Text("Temperatura: %.1f°C".format(Locale.getDefault(), data.main.temp), style = MaterialTheme.typography.bodyLarge)
+                        Text("Umidade: ${data.main.humidity}%", style = MaterialTheme.typography.bodyLarge)
+                        Text("Condição: ${data.weather.firstOrNull()?.description?.capitalize(Locale.ROOT) ?: "N/A"}", style = MaterialTheme.typography.bodyLarge)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        hydrationSuggestion?.let { suggestion ->
+                            Text(
+                                text = suggestion,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                } ?: run {
+                    Text("Carregando dados do clima...", style = MaterialTheme.typography.bodyMedium)
                 }
-            } ?: run {
-                Text("Carregando dados do clima...", style = MaterialTheme.typography.bodyMedium)
             }
+            // O bloco 'else' que exibia a mensagem "Sugestões de clima desativadas nas configurações." foi removido.
         }
     }
 
