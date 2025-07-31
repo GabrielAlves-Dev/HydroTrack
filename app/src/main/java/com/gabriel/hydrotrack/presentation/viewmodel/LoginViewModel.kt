@@ -48,8 +48,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun register(email: String, pass: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
-        if (email.isBlank() || pass.isBlank()) {
+    fun register(name: String, email: String, pass: String, onSuccess: () -> Unit, onError: (String) -> Unit) { // Adicionado 'name'
+        if (name.isBlank() || email.isBlank() || pass.isBlank()) { // Validação do nome
             onError("Preencha todos os campos")
             return
         }
@@ -59,9 +59,9 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 authRepository.register(email, pass)
                 val currentUserEmail = authRepository.currentUserEmail
-                val currentUserDisplayName = authRepository.currentUserEmail?.substringBefore("@")
+                val displayNameToSave = if (name.isNotBlank()) name else currentUserEmail?.substringBefore("@")
                 if (currentUserEmail != null) {
-                    settingsDataStore.initializeUserData(currentUserEmail, currentUserDisplayName)
+                    settingsDataStore.initializeUserData(currentUserEmail, displayNameToSave)
                 }
                 scheduler.scheduleRepeatingNotifications()
                 onSuccess()

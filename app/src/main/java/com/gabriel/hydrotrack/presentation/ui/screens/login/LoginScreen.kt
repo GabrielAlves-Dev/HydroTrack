@@ -45,6 +45,7 @@ fun LoginScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") } // Novo estado para o nome
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isRegisterMode by remember { mutableStateOf(false) }
 
@@ -115,6 +116,18 @@ fun LoginScreen(
                     modifier = Modifier.padding(bottom = 32.dp)
                 )
 
+                if (isRegisterMode) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Nome") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !isLoading
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -146,7 +159,7 @@ fun LoginScreen(
                 Button(
                     onClick = {
                         if (isRegisterMode) {
-                            loginViewModel.register(email, password,
+                            loginViewModel.register(name, email, password,
                                 onSuccess = {
                                     errorMessage = null
                                     navController.navigate(Screen.Home.route) {
@@ -199,6 +212,11 @@ fun LoginScreen(
                     onClick = {
                         isRegisterMode = !isRegisterMode
                         errorMessage = null
+                        if (!isRegisterMode) {
+                            name = ""
+                        }
+                        email = ""
+                        password = ""
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading
