@@ -49,7 +49,9 @@ class HomeViewModel(
     private val _weatherData = MutableStateFlow<WeatherData?>(null)
     val weatherData: StateFlow<WeatherData?> = _weatherData
 
-    // Nova propriedade para a sugestão de hidratação
+    private val _weatherError = MutableStateFlow<String?>(null) // Novo estado para erros do clima
+    val weatherError: StateFlow<String?> = _weatherError
+
     private val _hydrationSuggestion = MutableStateFlow<String?>(null)
     val hydrationSuggestion: StateFlow<String?> = _hydrationSuggestion
 
@@ -65,7 +67,6 @@ class HomeViewModel(
         waterRecordDao = (application as HydroTrackApplication).database.waterRecordDao()
 
         viewModelScope.launch {
-            // Combina o email do usuário e a preferência de mostrar sugestões de clima
             combine(
                 settingsDataStore.loggedInUserEmail,
                 showWeatherSuggestions
@@ -81,19 +82,33 @@ class HomeViewModel(
                         settingsDataStore.saveConsumption(_consumedWater.value, LocalDate.now())
                     }
 
-                    // Busca dados do clima e gera sugestão apenas se a opção estiver ativada
-                    if (showSuggestions && latitude != null && longitude != null) {
-                        val data = weatherRepository.getCurrentWeather(latitude, longitude)
-                        _weatherData.value = data
-                        _hydrationSuggestion.value = generateHydrationSuggestion(data?.main?.temp) // Gera sugestão
+                    if (showSuggestions) {
+                        if (latitude != null && longitude != null) {
+                            try {
+                                val data = weatherRepository.getCurrentWeather(latitude, longitude)
+                                _weatherData.value = data
+                                _hydrationSuggestion.value = generateHydrationSuggestion(data?.main?.temp)
+                                _weatherError.value = null // Limpa o erro em caso de sucesso
+                            } catch (e: Exception) {
+                                _weatherData.value = null
+                                _hydrationSuggestion.value = null
+                                _weatherError.value = "Erro ao carregar dados do clima: ${e.localizedMessage ?: "Verifique sua conexão ou permissões."}"
+                            }
+                        } else {
+                            _weatherData.value = null
+                            _hydrationSuggestion.value = null
+                            _weatherError.value = "Localização não disponível para sugestões de clima." // Erro se lat/lon forem nulos
+                        }
                     } else {
-                        _weatherData.value = null // Limpa dados do clima se a opção estiver desativada
-                        _hydrationSuggestion.value = null // Limpa a sugestão
+                        _weatherData.value = null
+                        _hydrationSuggestion.value = null
+                        _weatherError.value = null // Limpa o erro se a opção estiver desativada
                     }
                 } else {
                     _consumedWater.value = 0
                     _weatherData.value = null
                     _hydrationSuggestion.value = null
+                    _weatherError.value = null
                 }
             }
         }
