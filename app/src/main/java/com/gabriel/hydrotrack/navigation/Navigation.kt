@@ -47,7 +47,7 @@ fun AppNavigation(
             val application = navController.context.applicationContext as Application
             LoginScreen(
                 navController = navController,
-                loginViewModel = viewModel(factory = LoginViewModel.LoginViewModelFactory(application = application)) // Usando a nova factory
+                loginViewModel = viewModel(factory = LoginViewModel.LoginViewModelFactory(application = application))
             )
         }
         composable(Screen.Home.route) {
@@ -67,11 +67,7 @@ fun AppNavigation(
         composable(Screen.Profile.route) {
             ProfileScreen(
                 navController = navController,
-                profileViewModel = viewModel<ProfileViewModel>(
-                    factory = ProfileViewModel.ProfileViewModelFactory(
-                        application = (navController.context.applicationContext as Application)
-                    )
-                )
+                profileViewModel = viewModel<ProfileViewModel>()
             )
         }
         composable(Screen.Settings.route) {

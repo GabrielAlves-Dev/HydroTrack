@@ -2,6 +2,8 @@ package com.gabriel.hydrotrack.presentation.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.gabriel.hydrotrack.HydroTrackApplication
 import com.gabriel.hydrotrack.data.local.dao.WaterRecord
@@ -43,6 +45,20 @@ class ConsumptionHistoryViewModel(application: Application) : AndroidViewModel(a
     fun deleteRecord(record: WaterRecord) {
         viewModelScope.launch {
             waterRecordDao.delete(record)
+        }
+    }
+
+    companion object {
+        class ConsumptionHistoryViewModelFactory(
+            private val application: Application
+        ) : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(ConsumptionHistoryViewModel::class.java)) {
+                    @Suppress("UNCHECKED_CAST")
+                    return ConsumptionHistoryViewModel(application) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
+            }
         }
     }
 }

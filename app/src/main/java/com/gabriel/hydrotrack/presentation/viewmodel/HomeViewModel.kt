@@ -118,17 +118,19 @@ class HomeViewModel(
         }
     }
 
-    class HomeViewModelFactory(
-        private val application: Application,
-        private val latitude: Double?,
-        private val longitude: Double?
-    ) : ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                return HomeViewModel(application, latitude, longitude) as T
+    companion object {
+        class HomeViewModelFactory(
+            private val application: Application,
+            private val latitude: Double?,
+            private val longitude: Double?
+        ) : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
+                    @Suppress("UNCHECKED_CAST")
+                    return HomeViewModel(application, latitude, longitude) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
             }
-            throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }

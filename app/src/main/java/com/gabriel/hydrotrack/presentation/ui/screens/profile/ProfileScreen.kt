@@ -61,7 +61,11 @@ import kotlinx.coroutines.launch
 fun ProfileScreen(
     navController: NavController,
     profileViewModel: ProfileViewModel = viewModel(),
-    loginViewModel: LoginViewModel = viewModel()
+    loginViewModel: LoginViewModel = viewModel(
+        factory = LoginViewModel.LoginViewModelFactory(
+            application = (navController.context.applicationContext as android.app.Application)
+        )
+    )
 ) {
     val userProfile by profileViewModel.userProfile.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
