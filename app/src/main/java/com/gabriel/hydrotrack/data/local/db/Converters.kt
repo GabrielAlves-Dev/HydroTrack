@@ -7,7 +7,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-class TypeConverters {
+class Converters {
     @RequiresApi(Build.VERSION_CODES.O)
     @TypeConverter
     fun fromTimestamp(value: String?): LocalDateTime? {

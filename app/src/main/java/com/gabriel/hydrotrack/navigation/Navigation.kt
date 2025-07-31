@@ -67,7 +67,11 @@ fun AppNavigation(
         composable(Screen.Profile.route) {
             ProfileScreen(
                 navController = navController,
-                profileViewModel = viewModel<ProfileViewModel>()
+                profileViewModel = viewModel<ProfileViewModel>(
+                    factory = ProfileViewModel.ProfileViewModelFactory(
+                        application = (navController.context.applicationContext as Application)
+                    )
+                )
             )
         }
         composable(Screen.Settings.route) {
@@ -89,7 +93,11 @@ fun AppNavigation(
         composable(Screen.ConsumptionHistory.route) {
             ConsumptionHistoryScreen(
                 navController = navController,
-                historyViewModel = viewModel<ConsumptionHistoryViewModel>()
+                historyViewModel = viewModel<ConsumptionHistoryViewModel>(
+                    factory = ConsumptionHistoryViewModel.ConsumptionHistoryViewModelFactory(
+                        application = (navController.context.applicationContext as Application)
+                    )
+                )
             )
         }
     }
