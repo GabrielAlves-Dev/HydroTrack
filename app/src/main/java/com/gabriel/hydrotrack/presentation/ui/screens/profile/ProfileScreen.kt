@@ -47,6 +47,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -55,6 +59,45 @@ import com.gabriel.hydrotrack.navigation.Screen
 import com.gabriel.hydrotrack.presentation.viewmodel.LoginViewModel
 import com.gabriel.hydrotrack.presentation.viewmodel.ProfileViewModel
 import kotlinx.coroutines.launch
+
+class PhoneNumberVisualTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val trimmed = if (text.text.length >= 11) text.text.substring(0..10) else text.text // Limita a 11 dígitos
+        val output = StringBuilder()
+        trimmed.forEachIndexed { index, char ->
+            when (index) {
+                0 -> output.append("(")
+                2 -> output.append(") ")
+                7 -> output.append("-")
+            }
+            output.append(char)
+        }
+
+        val phoneNumberOffsetTranslator = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int {
+                if (offset <= 0) return offset
+                if (offset <= 2) return offset + 1
+                if (offset <= 7) return offset + 3
+                if (offset <= 11) return offset + 4
+                return 15
+            }
+
+            override fun transformedToOriginal(offset: Int): Int {
+                if (offset <= 1) return offset
+                if (offset <= 4) return offset - 1
+                if (offset <= 9) return offset - 3
+                if (offset <= 15) return offset - 4
+                return trimmed.length
+            }
+        }
+
+        return TransformedText(
+            AnnotatedString(output.toString()),
+            phoneNumberOffsetTranslator
+        )
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +117,7 @@ fun ProfileScreen(
 
     var editedName by remember(userProfile) { mutableStateOf(userProfile.name) }
     var editedEmail by remember(userProfile) { mutableStateOf(userProfile.email) }
-    var editedPhone by remember(userProfile) { mutableStateOf(userProfile.phone) }
+    var editedPhone by remember(userProfile) { mutableStateOf(userProfile.phone.filter { it.isDigit() }) }
 
     Scaffold(
         topBar = {
@@ -123,7 +166,7 @@ fun ProfileScreen(
 
                         Text("Nome: ${userProfile.name}")
                         Text("Email: ${userProfile.email}")
-                        Text("Telefone: ${userProfile.phone}")
+                        Text("Telefone: ${PhoneNumberVisualTransformation().filter(AnnotatedString(userProfile.phone)).text}")
                     }
                 }
 
@@ -133,7 +176,7 @@ fun ProfileScreen(
                     onClick = {
                         editedName = userProfile.name
                         editedEmail = userProfile.email
-                        editedPhone = userProfile.phone
+                        editedPhone = userProfile.phone.filter { it.isDigit() }
                         showEditDialog = true
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -200,9 +243,12 @@ fun ProfileScreen(
 
                     OutlinedTextField(
                         value = editedPhone,
-                        onValueChange = { editedPhone = it },
+                        onValueChange = { newValue ->
+                            editedPhone = newValue.filter { it.isDigit() }
+                        },
                         label = { Text("Telefone") },
                         modifier = Modifier.fillMaxWidth(),
+                        visualTransformation = PhoneNumberVisualTransformation(),
                         enabled = !isLoading
                     )
                     Spacer(modifier = Modifier.height(16.dp))
