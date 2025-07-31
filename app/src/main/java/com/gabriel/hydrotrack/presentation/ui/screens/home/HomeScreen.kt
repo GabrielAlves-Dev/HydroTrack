@@ -1,4 +1,4 @@
-package com.gabiel.hydrotrack.ui.home
+package com.gabriel.hydrotrack.presentation.ui.screens.home
 
 import android.os.Build
 import androidx.annotation.RequiresApi

@@ -1,6 +1,5 @@
 package com.gabriel.hydrotrack.data.remote.weather
 
-import com.gabiel.hydrotrack.data.remote.weather.WeatherApiService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit

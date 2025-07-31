@@ -1,6 +1,5 @@
-package com.gabiel.hydrotrack.data.remote.weather
+package com.gabriel.hydrotrack.data.remote.weather
 
-import com.gabriel.hydrotrack.data.remote.weather.WeatherData
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query

@@ -2,14 +2,11 @@ package com.gabriel.hydrotrack.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Entity
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
-import androidx.room.PrimaryKey
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Dao
 interface WaterRecordDao {
@@ -32,11 +29,3 @@ interface WaterRecordDao {
     @Query("DELETE FROM water_records WHERE userId = :userId")
     suspend fun deleteAllRecordsForUser(userId: String)
 }
-
-@Entity(tableName = "water_records")
-data class WaterRecord(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val userId: String,
-    val amountMl: Int,
-    val timestamp: LocalDateTime
-)

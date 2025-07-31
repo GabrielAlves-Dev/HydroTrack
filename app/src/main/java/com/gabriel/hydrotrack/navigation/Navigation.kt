@@ -8,7 +8,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.gabiel.hydrotrack.ui.home.HomeScreen
+import com.gabriel.hydrotrack.presentation.ui.screens.home.HomeScreen
 import com.gabriel.hydrotrack.presentation.ui.screens.goal.GoalScreen
 import com.gabriel.hydrotrack.presentation.ui.screens.history.ConsumptionHistoryScreen
 import com.gabriel.hydrotrack.presentation.ui.screens.login.LoginScreen
@@ -18,6 +18,7 @@ import com.gabriel.hydrotrack.presentation.ui.screens.unit.UnitScreen
 import com.gabriel.hydrotrack.presentation.viewmodel.ConsumptionHistoryViewModel
 import com.gabriel.hydrotrack.presentation.viewmodel.GoalViewModel
 import com.gabriel.hydrotrack.presentation.viewmodel.HomeViewModel
+import com.gabriel.hydrotrack.presentation.viewmodel.LoginViewModel
 import com.gabriel.hydrotrack.presentation.viewmodel.ProfileViewModel
 import com.gabriel.hydrotrack.presentation.viewmodel.ThemeViewModel
 import com.gabriel.hydrotrack.presentation.viewmodel.UnitViewModel
@@ -43,9 +44,10 @@ fun AppNavigation(
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Screen.Login.route) {
+            val application = navController.context.applicationContext as Application
             LoginScreen(
                 navController = navController,
-                loginViewModel = viewModel()
+                loginViewModel = viewModel(factory = LoginViewModel.LoginViewModelFactory(application = application)) // Usando a nova factory
             )
         }
         composable(Screen.Home.route) {

@@ -2,22 +2,25 @@ package com.gabriel.hydrotrack.presentation.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.application
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.gabriel.hydrotrack.data.local.preferences.UserPreferencesDataStore
+import com.gabriel.hydrotrack.data.repository.AuthRepositoryImpl
+import com.gabriel.hydrotrack.data.repository.IAuthRepository
 import com.gabriel.hydrotrack.service.NotificationScheduler
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
-class LoginViewModel(application: Application) : AndroidViewModel(application) {
-    private val settingsDataStore = UserPreferencesDataStore(application)
-    private val scheduler = NotificationScheduler(application)
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+class LoginViewModel(
+    application: Application,
+    private val authRepository: IAuthRepository,
+    private val settingsDataStore: UserPreferencesDataStore,
+    private val scheduler: NotificationScheduler
+) : AndroidViewModel(application) {
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
@@ -31,10 +34,11 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                auth.signInWithEmailAndPassword(email, pass).await()
-                val currentUser = auth.currentUser
-                if (currentUser != null) {
-                    settingsDataStore.initializeUserData(currentUser.email ?: "", currentUser.displayName)
+                authRepository.login(email, pass)
+                val currentUserEmail = authRepository.currentUserEmail
+                val currentUserDisplayName = GoogleSignIn.getLastSignedInAccount(getApplication<Application>().applicationContext)?.displayName
+                if (currentUserEmail != null) {
+                    settingsDataStore.initializeUserData(currentUserEmail, currentUserDisplayName)
                 }
                 scheduler.scheduleRepeatingNotifications()
                 onSuccess()
@@ -55,10 +59,11 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                auth.createUserWithEmailAndPassword(email, pass).await()
-                val currentUser = auth.currentUser
-                if (currentUser != null) {
-                    settingsDataStore.initializeUserData(currentUser.email ?: "", currentUser.displayName)
+                authRepository.register(email, pass)
+                val currentUserEmail = authRepository.currentUserEmail
+                val currentUserDisplayName = authRepository.currentUserEmail?.substringBefore("@")
+                if (currentUserEmail != null) {
+                    settingsDataStore.initializeUserData(currentUserEmail, currentUserDisplayName)
                 }
                 scheduler.scheduleRepeatingNotifications()
                 onSuccess()
@@ -74,13 +79,12 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val credential = GoogleAuthProvider.getCredential(idToken, null)
-                auth.signInWithCredential(credential).await()
-                val currentUser = auth.currentUser
-                if (currentUser != null) {
-                    val googleAccount = GoogleSignIn.getLastSignedInAccount(application.applicationContext)
-                    val displayNameFromGoogle = googleAccount?.displayName
-                    settingsDataStore.initializeUserData(currentUser.email ?: "", displayNameFromGoogle)
+                authRepository.signInWithGoogleCredential(idToken)
+                val currentUserEmail = authRepository.currentUserEmail
+                val googleAccount = GoogleSignIn.getLastSignedInAccount(getApplication<Application>().applicationContext)
+                val displayNameFromGoogle = googleAccount?.displayName
+                if (currentUserEmail != null) {
+                    settingsDataStore.initializeUserData(currentUserEmail, displayNameFromGoogle)
                 }
                 scheduler.scheduleRepeatingNotifications()
                 onSuccess()
@@ -94,7 +98,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     fun logout() {
         viewModelScope.launch {
-            auth.signOut()
+            authRepository.logout()
             scheduler.cancelNotifications()
         }
     }
@@ -103,9 +107,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val user = auth.currentUser
-                if (user != null) {
-                    user.delete().await()
+                if (authRepository.currentUserId != null) {
+                    authRepository.deleteAccount()
                     scheduler.cancelNotifications()
                     onSuccess()
                 } else {
@@ -116,6 +119,23 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+
+    class LoginViewModelFactory(
+        private val application: Application
+    ) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(LoginViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                return LoginViewModel(
+                    application,
+                    AuthRepositoryImpl(FirebaseAuth.getInstance()),
+                    UserPreferencesDataStore(application),
+                    NotificationScheduler(application)
+                ) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }
