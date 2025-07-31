@@ -2,15 +2,11 @@ package com.gabriel.hydrotrack.presentation.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.gabriel.hydrotrack.data.local.preferences.UserPreferencesDataStore
-import com.gabriel.hydrotrack.data.repository.AuthRepositoryImpl
 import com.gabriel.hydrotrack.data.repository.IAuthRepository
 import com.gabriel.hydrotrack.service.NotificationScheduler
 import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -121,21 +117,4 @@ class LoginViewModel(
             }
         }
     }
-
-        class LoginViewModelFactory(
-            private val application: Application
-        ) : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                if (modelClass.isAssignableFrom(LoginViewModel::class.java)) {
-                    @Suppress("UNCHECKED_CAST")
-                    return LoginViewModel(
-                        application,
-                        AuthRepositoryImpl(FirebaseAuth.getInstance()),
-                        UserPreferencesDataStore(application),
-                        NotificationScheduler(application)
-                    ) as T
-                }
-                throw IllegalArgumentException("Unknown ViewModel class")
-            }
-        }
 }

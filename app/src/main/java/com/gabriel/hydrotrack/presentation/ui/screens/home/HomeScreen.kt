@@ -60,11 +60,7 @@ fun HomeScreen(
     themeViewModel: ThemeViewModel,
     homeViewModel: HomeViewModel = viewModel(),
     unitViewModel: UnitViewModel = viewModel(),
-    loginViewModel: LoginViewModel = viewModel(
-        factory = LoginViewModel.LoginViewModelFactory(
-            application = (navController.context.applicationContext as android.app.Application)
-        )
-    )
+    loginViewModel: LoginViewModel = viewModel()
 ) {
     val consumedWater by homeViewModel.consumedWater.collectAsState()
     val dailyGoal by homeViewModel.dailyGoal.collectAsState()
