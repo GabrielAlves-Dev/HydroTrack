@@ -88,9 +88,12 @@ fun AppNavigation(
             )
         }
         composable(Screen.ConsumptionHistory.route) {
+            val application = navController.context.applicationContext as Application
             ConsumptionHistoryScreen(
                 navController = navController,
-                historyViewModel = viewModel<ConsumptionHistoryViewModel>()
+                historyViewModel = viewModel(
+                    factory = ConsumptionHistoryViewModel.provideFactory(application)
+                )
             )
         }
     }
