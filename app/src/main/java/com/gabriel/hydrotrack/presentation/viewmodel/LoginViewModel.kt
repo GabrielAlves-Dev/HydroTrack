@@ -4,19 +4,21 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.gabriel.hydrotrack.data.local.preferences.UserPreferencesDataStore
+import com.gabriel.hydrotrack.data.repository.AuthRepositoryImpl
 import com.gabriel.hydrotrack.data.repository.IAuthRepository
 import com.gabriel.hydrotrack.service.NotificationScheduler
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-class LoginViewModel(
-    application: Application,
-    private val authRepository: IAuthRepository,
-    private val settingsDataStore: UserPreferencesDataStore,
-    private val scheduler: NotificationScheduler
-) : AndroidViewModel(application) {
+class LoginViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val authRepository: IAuthRepository = AuthRepositoryImpl(FirebaseAuth.getInstance())
+    private val settingsDataStore: UserPreferencesDataStore = UserPreferencesDataStore(application)
+    private val scheduler: NotificationScheduler = NotificationScheduler(application)
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()

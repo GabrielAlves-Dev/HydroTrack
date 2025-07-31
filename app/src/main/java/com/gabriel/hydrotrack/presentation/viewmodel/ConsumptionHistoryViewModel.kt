@@ -2,6 +2,8 @@ package com.gabriel.hydrotrack.presentation.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.gabriel.hydrotrack.HydroTrackApplication
 import com.gabriel.hydrotrack.data.local.dao.WaterRecord

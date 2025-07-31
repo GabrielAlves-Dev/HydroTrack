@@ -18,6 +18,7 @@ import com.gabriel.hydrotrack.presentation.ui.screens.unit.UnitScreen
 import com.gabriel.hydrotrack.presentation.viewmodel.ConsumptionHistoryViewModel
 import com.gabriel.hydrotrack.presentation.viewmodel.GoalViewModel
 import com.gabriel.hydrotrack.presentation.viewmodel.HomeViewModel
+import com.gabriel.hydrotrack.presentation.viewmodel.LoginViewModel
 import com.gabriel.hydrotrack.presentation.viewmodel.ProfileViewModel
 import com.gabriel.hydrotrack.presentation.viewmodel.ThemeViewModel
 import com.gabriel.hydrotrack.presentation.viewmodel.UnitViewModel
@@ -50,10 +51,17 @@ fun AppNavigation(
             )
         }
         composable(Screen.Home.route) {
+            val application = navController.context.applicationContext as Application
             HomeScreen(
                 navController = navController,
                 themeViewModel = themeViewModel,
-                homeViewModel = viewModel<HomeViewModel>(),
+                homeViewModel = viewModel(
+                    factory = HomeViewModel.Companion.HomeViewModelFactory(
+                        application,
+                        userLatitude,
+                        userLongitude
+                    )
+                ),
                 unitViewModel = viewModel<UnitViewModel>()
             )
         }
