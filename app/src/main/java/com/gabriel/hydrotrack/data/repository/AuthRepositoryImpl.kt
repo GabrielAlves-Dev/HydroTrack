@@ -2,11 +2,14 @@ package com.gabriel.hydrotrack.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.tasks.await
 
 class AuthRepositoryImpl(
     private val firebaseAuth: FirebaseAuth
 ) : IAuthRepository {
+
+    private val firebaseDb = FirebaseDatabase.getInstance().reference
 
     override val currentUserId: String?
         get() = firebaseAuth.currentUser?.uid
@@ -33,5 +36,9 @@ class AuthRepositoryImpl(
 
     override suspend fun deleteAccount() {
         firebaseAuth.currentUser?.delete()?.await()
+    }
+
+    override suspend fun deleteUserDataFromDatabase(uid: String) {
+        firebaseDb.child("users").child(uid).removeValue().await()
     }
 }

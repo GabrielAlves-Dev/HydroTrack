@@ -14,4 +14,6 @@ interface IAuthRepository {
     suspend fun logout()
 
     suspend fun deleteAccount()
+
+    suspend fun deleteUserDataFromDatabase(uid: String)
 }

@@ -3,6 +3,8 @@ package com.gabriel.hydrotrack.presentation.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.gabriel.hydrotrack.HydroTrackApplication
+import com.gabriel.hydrotrack.data.local.dao.WaterRecordDao
 import com.gabriel.hydrotrack.data.local.preferences.UserPreferencesDataStore
 import com.gabriel.hydrotrack.data.repository.AuthRepositoryImpl
 import com.gabriel.hydrotrack.data.repository.IAuthRepository
@@ -19,6 +21,11 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     private val authRepository: IAuthRepository = AuthRepositoryImpl(FirebaseAuth.getInstance())
     private val settingsDataStore: UserPreferencesDataStore = UserPreferencesDataStore(application)
     private val scheduler: NotificationScheduler = NotificationScheduler(application)
+    private val waterRecordDao: WaterRecordDao
+
+    init {
+        waterRecordDao = (application as HydroTrackApplication).database.waterRecordDao()
+    }
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
@@ -48,8 +55,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun register(name: String, email: String, pass: String, onSuccess: () -> Unit, onError: (String) -> Unit) { // Adicionado 'name'
-        if (name.isBlank() || email.isBlank() || pass.isBlank()) { // Validação do nome
+    fun register(name: String, email: String, pass: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        if (name.isBlank() || email.isBlank() || pass.isBlank()) {
             onError("Preencha todos os campos")
             return
         }
@@ -98,6 +105,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             authRepository.logout()
             scheduler.cancelNotifications()
+            settingsDataStore.clearUserData()
         }
     }
 
@@ -105,9 +113,23 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                if (authRepository.currentUserId != null) {
+                val uid = authRepository.currentUserId // Corrigido para usar authRepository.currentUserId
+                if (uid != null) {
+                    // 1. Deletar dados do Firebase Realtime Database
+                    authRepository.deleteUserDataFromDatabase(uid)
+
+                    // 2. Deletar usuário do Firebase Authentication
                     authRepository.deleteAccount()
+
+                    // 3. Cancelar notificações agendadas
                     scheduler.cancelNotifications()
+
+                    // 4. Limpar dados locais no DataStore
+                    settingsDataStore.clearUserData()
+
+                    // 5. Deletar registros de água do Room Database
+                    waterRecordDao.deleteAllRecordsForUser(uid)
+
                     onSuccess()
                 } else {
                     onError("Nenhum usuário logado para excluir.")

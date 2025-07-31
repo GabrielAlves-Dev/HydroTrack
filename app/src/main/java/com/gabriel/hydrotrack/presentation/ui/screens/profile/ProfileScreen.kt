@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
@@ -48,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
@@ -62,7 +64,7 @@ import kotlinx.coroutines.launch
 
 class PhoneNumberVisualTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
-        val trimmed = if (text.text.length >= 11) text.text.substring(0..10) else text.text // Limita a 11 dígitos
+        val trimmed = if (text.text.length >= 11) text.text.substring(0..10) else text.text
         val output = StringBuilder()
         trimmed.forEachIndexed { index, char ->
             when (index) {
@@ -248,6 +250,7 @@ fun ProfileScreen(
                         },
                         label = { Text("Telefone") },
                         modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         visualTransformation = PhoneNumberVisualTransformation(),
                         enabled = !isLoading
                     )
@@ -303,35 +306,44 @@ fun ProfileScreen(
 
     if (showConfirmDeleteDialog) {
         AlertDialog(
-            onDismissRequest = { showConfirmDeleteDialog = false },
+            onDismissRequest = { /* Não dismiss quando isLoading for verdadeiro, apenas por ação de sucesso/erro */ },
             title = { Text("Excluir Conta") },
             text = { Text("Tem certeza que deseja excluir sua conta? Esta ação é irreversível e apagará todos os seus dados.") },
             confirmButton = {
-                TextButton(onClick = {
-                    showConfirmDeleteDialog = false
-                    loginViewModel.deleteAccount(
-                        onSuccess = {
-                            scope.launch {
-                                snackbarHostState.showSnackbar("Conta excluída com sucesso!")
-                                navController.navigate(Screen.Login.route) {
-                                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                TextButton(
+                    onClick = {
+                        loginViewModel.deleteAccount(
+                            onSuccess = {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Conta excluída com sucesso!")
+                                    navController.navigate(Screen.Login.route) {
+                                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                                    }
                                 }
+                            },
+                            onError = { errorMsg ->
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Erro ao excluir conta: $errorMsg")
+                                }
+                                showConfirmDeleteDialog = false
                             }
-                        },
-                        onError = { errorMsg ->
-                            scope.launch {
-                                snackbarHostState.showSnackbar("Erro ao excluir conta: $errorMsg")
-                            }
-                        }
-                    )
-                },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                        )
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    enabled = !isLoading
                 ) {
-                    Text("Excluir")
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onError
+                        )
+                    } else {
+                        Text("Excluir")
+                    }
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showConfirmDeleteDialog = false }) {
+                TextButton(onClick = { showConfirmDeleteDialog = false }, enabled = !isLoading) {
                     Text("Cancelar")
                 }
             }
