@@ -55,6 +55,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
+    implementation("androidx.compose.material3:material3:1.2.1") // Usando uma versão estável recente
+
     // REMOVIDO: "com.google.android.material:material" - Não é necessário para Compose Material3 e pode causar conflitos.
     // implementation("com.google.android.material:material:1.12.0")
 
