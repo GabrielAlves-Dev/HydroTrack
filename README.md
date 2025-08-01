@@ -64,7 +64,3 @@ Este projeto foi desenvolvido por:
 * **Robson José**
 
 Para a disciplina de Desenvolvimento para Dispositivos Móveis da Universidade Federal do Ceará (UFC), semestre 2025.1, sob a orientação do **Professor Francisco Victor**.
-
-## 📄 Licença
-
-Este projeto está licenciado sob a licença MIT. Consulte o arquivo `LICENSE` para mais detalhes.
