@@ -9,7 +9,7 @@ class WeatherRepository {
 
     private val weatherApiService: WeatherApiService
 
-    private val OPEN_WEATHER_API_KEY = "bd3ad01103aa27a599691ff0626a2f89"
+    private val OPEN_WEATHER_API_KEY = "bd3ad01103aa27a599691ff0626a2f89" // chave desativada
 
     init {
         val logging = HttpLoggingInterceptor().apply {
